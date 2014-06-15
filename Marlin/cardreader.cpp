@@ -437,7 +437,7 @@ void CardReader::removeFile(char* name)
     if (file.remove(curDir, fname)) 
     {
       SERIAL_PROTOCOLPGM("File deleted:");
-      SERIAL_PROTOCOLLN(fname);
+      SERIAL_PROTOCOL(fname);
       sdpos = 0;
     }
     else
