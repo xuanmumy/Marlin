@@ -1570,7 +1570,8 @@ void process_commands()
             #error "You must have a Z_MIN endstop in order to enable Auto Bed Leveling feature!!! Z_MIN_PIN must point to a valid hardware pin."
             #endif
 
-            st_synchronize();
+            st_synchronize(); // Block until all buffered steps are executed
+            
             // make sure the bed_level_rotation_matrix is identity or the planner will get it incorectly
             //vector_3 corrected_position = plan_get_position_mm();
             //corrected_position.debug("position before G29");
@@ -1581,7 +1582,7 @@ void process_commands()
             setup_for_endstop_move();
 
             feedrate = homing_feedrate[Z_AXIS];
-#ifdef ACCURATE_BED_LEVELING
+
             // solve the plane equation ax + by + d = z
             // A is the matrix with rows [x y 1] for all the probed points
             // B is the vector of the Z positions
@@ -1593,8 +1594,10 @@ void process_commands()
             // "B" vector of Z points
             double eqnBVector[ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS];
 
+
             float z_offset = Z_PROBE_OFFSET_FROM_EXTRUDER;
-            if (code_seen(axis_codes[Z_AXIS])) {
+            if (code_seen(axis_codes[Z_AXIS])) 
+            {
               z_offset += code_value();
             }
 
@@ -1615,92 +1618,51 @@ void process_commands()
                 xStop = -1;
                 xInc = -1;
               }
-
+              
+              SERIAL_PROTOCOL("Free memory: ");
+              SERIAL_PROTOCOL(freeMemory());
+              SERIAL_PROTOCOL("\nFree memory: ");
+              
               for (int xCount=xStart; xCount != xStop; xCount += xInc)
               {
                 float xProbe = LEFT_PROBE_BED_POSITION + ACCURATE_BED_LEVELING_GRID_X * xCount;
 
-                #ifdef DELTA
                 // Avoid probing the corners (outside the round or hexagon print surface) on a delta printer.
                 float distance_from_center = sqrt(xProbe*xProbe + yProbe*yProbe);
-                if (distance_from_center > DELTA_PRINTABLE_RADIUS) continue;
-                #endif //DELTA
+                if (distance_from_center <= DELTA_PRINTABLE_RADIUS)
+                {
+                  SERIAL_PROTOCOL("Free memory: ");
+                  SERIAL_PROTOCOL(freeMemory());
+                  SERIAL_PROTOCOL("\nxProbe: ");
+                  SERIAL_PROTOCOL(xProbe);
+                  SERIAL_PROTOCOL("\nyProbe: ");
+                  SERIAL_PROTOCOL(yProbe);
+                  SERIAL_PROTOCOL("\n");
+                  float z_before = probePointCounter == 0 ? Z_RAISE_BEFORE_PROBING : current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS;
+                  float measured_z = probe_pt(xProbe, yProbe, z_before); //<-=-=-=-=-=--=-=-=-=-=--=-=-=-=-=--=-=-=-=-=--=-=-=-=-=--=-=-=-=-=--=-=-=-=-=--=-=-=-=-=-
 
-                float z_before = probePointCounter == 0 ? Z_RAISE_BEFORE_PROBING :
-                  current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS;
-                float measured_z = probe_pt(xProbe, yProbe, z_before);
+                  bed_level[xCount][yCount] = measured_z + z_offset;
 
-                #ifdef NONLINEAR_BED_LEVELING
-                bed_level[xCount][yCount] = measured_z + z_offset;
-                #endif //NONLINEAR_BED_LEVELING
+                  eqnBVector[probePointCounter] = measured_z;
 
-                eqnBVector[probePointCounter] = measured_z;
-
-                eqnAMatrix[probePointCounter + 0*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = xProbe;
-                eqnAMatrix[probePointCounter + 1*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = yProbe;
-                eqnAMatrix[probePointCounter + 2*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = 1;
-                probePointCounter++;
+                  eqnAMatrix[probePointCounter + 0*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = xProbe;
+                  eqnAMatrix[probePointCounter + 1*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = yProbe;
+                  eqnAMatrix[probePointCounter + 2*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = 1;
+                  probePointCounter++;
+                }
               }
             }
+            while(1){}
             clean_up_after_endstop_move();
 
-          #ifdef NONLINEAR_BED_LEVELING
             extrapolate_unprobed_bed_level();
             print_bed_level();
-          #else
-            // solve lsq problem
-            double *plane_equation_coefficients = qr_solve(ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS, 3, eqnAMatrix, eqnBVector);
 
-            SERIAL_PROTOCOLPGM("Eqn coefficients: a: ");
-            SERIAL_PROTOCOL(plane_equation_coefficients[0]);
-            SERIAL_PROTOCOLPGM(" b: ");
-            SERIAL_PROTOCOL(plane_equation_coefficients[1]);
-            SERIAL_PROTOCOLPGM(" d: ");
-            SERIAL_PROTOCOLLN(plane_equation_coefficients[2]);
-
-
-            set_bed_level_equation_lsq(plane_equation_coefficients);
-
-            free(plane_equation_coefficients);
-          #endif //NONLINEAR_BED_LEVELING
-
-#else // ACCURATE_BED_LEVELING not defined
-
-
-            // prob 1
-            float z_at_xLeft_yBack = probe_pt(LEFT_PROBE_BED_POSITION, BACK_PROBE_BED_POSITION, Z_RAISE_BEFORE_PROBING);
-
-            // prob 2
-            float z_at_xLeft_yFront = probe_pt(LEFT_PROBE_BED_POSITION, FRONT_PROBE_BED_POSITION, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
-
-            // prob 3
-            float z_at_xRight_yFront = probe_pt(RIGHT_PROBE_BED_POSITION, FRONT_PROBE_BED_POSITION, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
-
-            clean_up_after_endstop_move();
-
-            set_bed_level_equation(z_at_xLeft_yFront, z_at_xRight_yFront, z_at_xLeft_yBack);
-
-
-#endif // ACCURATE_BED_LEVELING
             st_synchronize();
 
           #ifndef SERVO_ENDSTOPS
             retract_z_probe();   // Retract Z probe by moving the end effector.
           #endif //SERVO_ENDSTOPS
-
-          #ifndef NONLINEAR_BED_LEVELING
-            // The following code correct the Z height difference from z-probe position and hotend tip position.
-            // The Z height on homing is measured by Z-Probe, but the probe is quite far from the hotend.
-            // When the bed is uneven, this height must be corrected.
-            real_z = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];  //get the real Z (since the auto bed leveling is already correcting the plane)
-            x_tmp = current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER;
-            y_tmp = current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER;
-            z_tmp = current_position[Z_AXIS];
-
-            apply_rotation_xyz(plan_bed_level_matrix, x_tmp, y_tmp, z_tmp);         //Apply the correction sending the probe offset
-            current_position[Z_AXIS] = z_tmp - real_z + current_position[Z_AXIS];   //The difference is added to current position and sent to planner.
-            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-          #endif //NONLINEAR_BED_LEVELING
         }
         break;
 
