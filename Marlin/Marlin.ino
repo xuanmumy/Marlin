@@ -30,8 +30,6 @@
 /* All the implementation is done in *.cpp files to get better compatibility with avr-gcc without the Arduino IDE */
 /* Use this file to help the Arduino IDE find which Arduino libraries are needed and to keep documentation on GCode */
 
-#include <Adafruit_NeoPixel.h>
-
 #include "Configuration.h"
 #include "pins.h"
 
