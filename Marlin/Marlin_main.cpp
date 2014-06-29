@@ -30,10 +30,10 @@
 #include "Marlin.h"
 
 
-#include <Adafruit_NeoPixel.h>
+//#include <Adafruit_NeoPixel.h>
+//Adafruit_NeoPixel ringLight = Adafruit_NeoPixel(24, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-Adafruit_NeoPixel ringLight = Adafruit_NeoPixel(24, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
-
+int delta_calcForward(float theta1, float theta2, float theta3, float &x0, float &y0, float &z0);
 
 #ifdef ENABLE_AUTO_BED_LEVELING
 #include "vector_3.h"
@@ -206,9 +206,7 @@ float volumetric_multiplier[EXTRUDERS] = {1.0
 };
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 float add_homeing[3]={0,0,0};
-#ifdef DELTA
 float endstop_adj[3]={0,0,0};
-#endif
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 bool axis_known_position[3] = {false, false, false};
@@ -457,77 +455,77 @@ void servo_init()
   #endif
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-  if(WheelPos < 85) {
-   return ringLight.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-  } else if(WheelPos < 170) {
-   WheelPos -= 85;
-   return ringLight.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  } else {
-   WheelPos -= 170;
-   return ringLight.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-}
-
-
-void rainbow(uint8_t wait) {
-  uint16_t i, j;
-
-  for(j=0; j<256; j++) {
-    for(i=0; i<ringLight.numPixels(); i++) {
-      ringLight.setPixelColor(i, Wheel((i+j) & 255));
-    }
-    ringLight.show();
-    delay(wait);
-  }
-}
-
-//Theatre-style crawling lights.
-void theaterChase(uint32_t c, uint8_t wait) {
-  for (int j=0; j<10; j++) {  //do 10 cycles of chasing
-    for (int q=0; q < 3; q++) {
-      for (int i=0; i < ringLight.numPixels(); i=i+3) {
-        ringLight.setPixelColor(i+q, c);    //turn every third pixel on
-      }
-      ringLight.show();
-     
-      delay(wait);
-     
-      for (int i=0; i < ringLight.numPixels(); i=i+3) {
-        ringLight.setPixelColor(i+q, 0);        //turn every third pixel off
-      }
-    }
-  }
-}
-
-//Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(uint8_t wait) {
-  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-    for (int q=0; q < 3; q++) {
-        for (int i=0; i < ringLight.numPixels(); i=i+3) {
-          ringLight.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
-        }
-        ringLight.show();
-       
-        delay(wait);
-       
-        for (int i=0; i < ringLight.numPixels(); i=i+3) {
-          ringLight.setPixelColor(i+q, 0);        //turn every third pixel off
-        }
-    }
-  }
-}
-
-void setRingColor(uint8_t r, uint8_t g, uint8_t b)
-{
-  for (int j=0; j<24; j++)
-  {
-    ringLight.setPixelColor(j, r, g, b);    //turn every third pixel on
-  }
-  ringLight.show();
-}
+//// Input a value 0 to 255 to get a color value.
+//// The colours are a transition r - g - b - back to r.
+//uint32_t Wheel(byte WheelPos) {
+//  if(WheelPos < 85) {
+//   return ringLight.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+//  } else if(WheelPos < 170) {
+//   WheelPos -= 85;
+//   return ringLight.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+//  } else {
+//   WheelPos -= 170;
+//   return ringLight.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+//  }
+//}
+//
+//
+//void rainbow(uint8_t wait) {
+//  uint16_t i, j;
+//
+//  for(j=0; j<256; j++) {
+//    for(i=0; i<ringLight.numPixels(); i++) {
+//      ringLight.setPixelColor(i, Wheel((i+j) & 255));
+//    }
+//    ringLight.show();
+//    delay(wait);
+//  }
+//}
+//
+////Theatre-style crawling lights.
+//void theaterChase(uint32_t c, uint8_t wait) {
+//  for (int j=0; j<10; j++) {  //do 10 cycles of chasing
+//    for (int q=0; q < 3; q++) {
+//      for (int i=0; i < ringLight.numPixels(); i=i+3) {
+//        ringLight.setPixelColor(i+q, c);    //turn every third pixel on
+//      }
+//      ringLight.show();
+//     
+//      delay(wait);
+//     
+//      for (int i=0; i < ringLight.numPixels(); i=i+3) {
+//        ringLight.setPixelColor(i+q, 0);        //turn every third pixel off
+//      }
+//    }
+//  }
+//}
+//
+////Theatre-style crawling lights with rainbow effect
+//void theaterChaseRainbow(uint8_t wait) {
+//  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+//    for (int q=0; q < 3; q++) {
+//        for (int i=0; i < ringLight.numPixels(); i=i+3) {
+//          ringLight.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
+//        }
+//        ringLight.show();
+//       
+//        delay(wait);
+//       
+//        for (int i=0; i < ringLight.numPixels(); i=i+3) {
+//          ringLight.setPixelColor(i+q, 0);        //turn every third pixel off
+//        }
+//    }
+//  }
+//}
+//
+//void setRingColor(uint8_t r, uint8_t g, uint8_t b)
+//{
+//  for (int j=0; j<24; j++)
+//  {
+//    ringLight.setPixelColor(j, r, g, b);    //turn every third pixel on
+//  }
+//  ringLight.show();
+//}
 
 void setup()
 {
@@ -590,9 +588,11 @@ void setup()
     digipot_i2c_init();
   #endif
   
-  ringLight.begin();
-  //theaterChaseRainbow(5);
-  setRingColor(0,0,0);
+  //FirePick Delta specific stuff
+  digitalWrite(VACUUM_PIN,LOW);
+//  ringLight.begin();
+//  //theaterChaseRainbow(5);
+//  setRingColor(0,0,0);
 }
 
 
@@ -977,59 +977,75 @@ static void set_bed_level_equation(float z_at_xLeft_yFront, float z_at_xRight_yF
 }
 #endif // ACCURATE_BED_LEVELING
 
-static void run_z_probe() {
-    plan_bed_level_matrix.set_to_identity();
 
-#ifdef DELTA
+static void run_z_probe() 
+{
+    //This function has been overhauled considerably for supporting rotational delta kinematics.  
+    //The Rocholl linear delta version simply counted the "Z" steps down (divided by steps per mm) to determine the probe Z travel.
+    //For rotational delta, you can't do that, since the Z steps are an angle, not a distance.  The method used is described below.
+    // - Neil Jansen, 06/24/2014
     enable_endstops(true);
+    //Save old position
     float start_z = current_position[Z_AXIS];
-    long start_steps = st_get_position(Z_AXIS);
 
+    //Move end effector in a slow downward trajectory.  It should hit the endstop.
     feedrate = homing_feedrate[Z_AXIS]/4;
     destination[Z_AXIS] = -10;
     prepare_move_raw();
     st_synchronize();
     endstops_hit_on_purpose();
 
+    //Now get new position (in stepper motor steps)
     enable_endstops(false);
-    long stop_steps = st_get_position(Z_AXIS);
+    long stop_steps_x = st_get_position(X_AXIS);
+    long stop_steps_y = st_get_position(Y_AXIS);
+    long stop_steps_z = st_get_position(Z_AXIS);
+//    SERIAL_PROTOCOL("stop_steps_x: ");
+//    SERIAL_PROTOCOL(stop_steps_x);
+//    SERIAL_PROTOCOL("\nstop_steps_y: ");
+//    SERIAL_PROTOCOL(stop_steps_y);
+//    SERIAL_PROTOCOL("\nstop_steps_z: ");
+//    SERIAL_PROTOCOL(stop_steps_z);
+//    SERIAL_PROTOCOL("\n");
 
-    float mm = start_z - float(start_steps - stop_steps) / axis_steps_per_unit[Z_AXIS];
-    current_position[Z_AXIS] = mm;
+    //Now calculate the new angles of the delta arms, based off of the starting angle and the # of steps travelled
+    float x_angle = stop_steps_x / axis_steps_per_unit[X_AXIS];
+    float y_angle = stop_steps_y / axis_steps_per_unit[Y_AXIS];
+    float z_angle = stop_steps_z / axis_steps_per_unit[Z_AXIS];
+//    SERIAL_PROTOCOL("x_angle: ");
+//    SERIAL_PROTOCOL(x_angle);
+//    SERIAL_PROTOCOL("\ny_angle: ");
+//    SERIAL_PROTOCOL(y_angle);
+//    SERIAL_PROTOCOL("\nz_angle: ");
+//    SERIAL_PROTOCOL(z_angle);
+//    SERIAL_PROTOCOL("\n");
+    
+    //Now use forward delta kinematics to see where the end effector is in XYZ cartesian space
+    float x0 = 0;
+    float y0 = 0;
+    float end_z = 0;
+    int cf = delta_calcForward(x_angle, y_angle, z_angle, x0, y0, end_z);
+
+    //Now subtract "Z" from start and end positions to see how far down we moved
+    //float mm = start_z - end_z;
+
+//    SERIAL_PROTOCOL("start_z: ");
+//    SERIAL_PROTOCOL(start_z);
+//    SERIAL_PROTOCOL("\nend_z: ");
+//    SERIAL_PROTOCOL(end_z);
+//    SERIAL_PROTOCOL("end_z: ");
+//    SERIAL_PROTOCOL(end_z);
+//    SERIAL_PROTOCOL("\n");
+
+    //Now set the new cartesian "Z" point and call plan_set_position     
+    current_position[Z_AXIS] = end_z;
     calculate_delta(current_position);
-    plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
-#else
-    feedrate = homing_feedrate[Z_AXIS];
-
-    // move down until you find the bed
-    float zPosition = -10;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-        // we have to let the planner know where we are right now as it is not where we said to go.
-    zPosition = st_get_position_mm(Z_AXIS);
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS]);
-
-    // move up the retract distance
-    zPosition += home_retract_mm(Z_AXIS);
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    // move back down slowly to find bed
-    feedrate = homing_feedrate[Z_AXIS]/4;
-    zPosition -= home_retract_mm(Z_AXIS) * 2;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-    // make sure the planner knows where we are as it may be a bit different than we last said to move to
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-#endif
+    plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);  
 }
 
-static void do_blocking_move_to(float x, float y, float z) {
+static void do_blocking_move_to(float x, float y, float z) 
+{
     float oldFeedRate = feedrate;
-
     feedrate = XY_TRAVEL_SPEED;
 
 #ifdef DELTA
@@ -1075,7 +1091,7 @@ static void clean_up_after_endstop_move() {
 
 static void engage_z_probe() {
     // Engage Z Servo endstop if enabled
-    #ifdef SERVO_ENDSTOPS
+#ifdef SERVO_ENDSTOPS
     if (servo_endstops[Z_AXIS] > -1) {
 #if defined (ENABLE_AUTO_BED_LEVELING) && (PROBE_SERVO_DEACTIVATION_DELAY > 0)
         servos[servo_endstops[Z_AXIS]].attach(0);
@@ -1159,9 +1175,9 @@ static float probe_pt(float x, float y, float z_before) {
 
   SERIAL_PROTOCOLPGM(MSG_BED);
   SERIAL_PROTOCOLPGM(" x: ");
-  SERIAL_PROTOCOL(x);
+  SERIAL_PROTOCOL(x- X_PROBE_OFFSET_FROM_EXTRUDER);
   SERIAL_PROTOCOLPGM(" y: ");
-  SERIAL_PROTOCOL(y);
+  SERIAL_PROTOCOL(y - Y_PROBE_OFFSET_FROM_EXTRUDER);
   SERIAL_PROTOCOLPGM(" z: ");
   SERIAL_PROTOCOL(measured_z);
   SERIAL_PROTOCOLPGM("\n");
@@ -1367,6 +1383,14 @@ void process_commands()
       }
       break;
       #ifdef FWRETRACT
+      case 8: //Actuate ON (drag pin down)
+      {
+      }
+      break;
+      case 9: //Actuate OFF (drag pin up)
+      {
+      }
+      break;
       case 10: // G10 retract
       if(!retracted)
       {
@@ -1639,16 +1663,16 @@ void process_commands()
             //corrected_position.debug("position before G29");
             plan_bed_level_matrix.set_to_identity();
 
-          #ifdef NONLINEAR_BED_LEVELING
+//          #ifdef NONLINEAR_BED_LEVELING //<--NJ we use this for FPD
             reset_bed_level();
-          #else
-            vector_3 uncorrected_position = plan_get_position();
-            //uncorrected_position.debug("position durring G29");
-            current_position[X_AXIS] = uncorrected_position.x;
-            current_position[Y_AXIS] = uncorrected_position.y;
-            current_position[Z_AXIS] = uncorrected_position.z;
-            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-          #endif //NONLINEAR_BED_LEVELING
+//          #else
+//            vector_3 uncorrected_position = plan_get_position();
+//            //uncorrected_position.debug("position durring G29");
+//            current_position[X_AXIS] = uncorrected_position.x;
+//            current_position[Y_AXIS] = uncorrected_position.y;
+//            current_position[Z_AXIS] = uncorrected_position.z;
+//            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+//          #endif //NONLINEAR_BED_LEVELING
 
           #ifndef SERVO_ENDSTOPS
             engage_z_probe();   // Engage Z probe by moving the end effector.
@@ -1682,10 +1706,12 @@ void process_commands()
               float yProbe = FRONT_PROBE_BED_POSITION + ACCURATE_BED_LEVELING_GRID_Y * yCount;
               int xStart, xStop, xInc;
               if (yCount % 2) {
+                SERIAL_PROTOCOL("yCount % 2 == TRUE");
                 xStart = 0;
                 xStop = ACCURATE_BED_LEVELING_POINTS;
                 xInc = 1;
               } else {
+                SERIAL_PROTOCOL("yCount % 2 == FALSE");
                 xStart = ACCURATE_BED_LEVELING_POINTS - 1;
                 xStop = -1;
                 xInc = -1;
@@ -1863,6 +1889,18 @@ void process_commands()
     }
     break;
 #endif
+    case 4: //M4 Pick (vacuum on)
+    {
+      //Turn on vacuum
+      digitalWrite(VACUUM_PIN,HIGH);
+    }
+    break;
+    case 5: //M5 Place (vacuum off)
+    {
+      //Turn off vacuum
+      digitalWrite(VACUUM_PIN,LOW);
+    }
+    break;
     case 17:
         LCD_MESSAGEPGM(MSG_NO_MOVE);
         enable_x();
@@ -3146,7 +3184,7 @@ void process_commands()
       if (code_seen('R')) {lr=code_value_long(); }
       if (code_seen('E')) {lg=code_value_long(); }
       if (code_seen('B')) {lb=code_value_long(); }
-      setRingColor(lr, lg, lb);
+//      setRingColor(lr, lg, lb);
     }
     break;
     case 999: // M999: Restart after being stopped
@@ -3377,9 +3415,11 @@ void clamp_to_software_endstops(float target[3])
   }
 }
 
-#ifdef DELTA
+//Code from Trossen Robotics tutorial.
+//Takes 'cartesian[3]' and returns 'delta[3]'
 void calculate_delta(float cartesian[3])
 {
+  //trossen tutorial puts the "X" in the front/middle. FPD puts this arm in the back/middle for aesthetics.
   float rotated_x = -1 * cartesian[X_AXIS];
   float rotated_y = -1 * cartesian[Y_AXIS];
   float z_with_offset = cartesian[Z_AXIS] + Z_CALC_OFFSET; //The delta calc below places zero at the top.  Subtract the Z offset to make zero at the bottom.
@@ -3426,9 +3466,61 @@ void calculate_delta(float cartesian[3])
      theta = 180.0*atan(-zj/(y1 - yj))/pi + ((yj>y1)?180.0:0.0);
      return 0;
  }
+ 
+// forward kinematics: (theta1, theta2, theta3) -> (x0, y0, z0)
+// returned status: 0=OK, -1=non-existing position
+int delta_calcForward(float theta1, float theta2, float theta3, float &x0, float &y0, float &z0) 
+{
+     float t = (DELTA_F-DELTA_E)*tan30/2;
+     float dtr = pi/(float)180.0;
+ 
+     theta1 *= dtr;
+     theta2 *= dtr;
+     theta3 *= dtr;
+ 
+     float y1 = -(t + DELTA_RF*cos(theta1));
+     float z1 = -DELTA_RF*sin(theta1);
+ 
+     float y2 = (t + DELTA_RF*cos(theta2))*sin30;
+     float x2 = y2*tan60;
+     float z2 = -DELTA_RF*sin(theta2);
+ 
+     float y3 = (t + DELTA_RF*cos(theta3))*sin30;
+     float x3 = -y3*tan60;
+     float z3 = -DELTA_RF*sin(theta3);
+ 
+     float dnm = (y2-y1)*x3-(y3-y1)*x2;
+ 
+     float w1 = y1*y1 + z1*z1;
+     float w2 = x2*x2 + y2*y2 + z2*z2;
+     float w3 = x3*x3 + y3*y3 + z3*z3;
+     
+     // x = (a1*z + b1)/dnm
+     float a1 = (z2-z1)*(y3-y1)-(z3-z1)*(y2-y1);
+     float b1 = -((w2-w1)*(y3-y1)-(w3-w1)*(y2-y1))/2.0;
+ 
+     // y = (a2*z + b2)/dnm;
+     float a2 = -(z2-z1)*x3+(z3-z1)*x2;
+     float b2 = ((w2-w1)*x3 - (w3-w1)*x2)/2.0;
+ 
+     // a*z^2 + b*z + c = 0
+     float a = a1*a1 + a2*a2 + dnm*dnm;
+     float b = 2*(a1*b1 + a2*(b2-y1*dnm) - z1*dnm*dnm);
+     float c = (b2-y1*dnm)*(b2-y1*dnm) + b1*b1 + dnm*dnm*(z1*z1 - DELTA_RE*DELTA_RE);
+  
+     // discriminant
+     float d = b*b - (float)4.0*a*c;
+     if (d < 0) return -1; // non-existing point
+ 
+     z0 = -(float)0.5*(b+sqrt(d))/a;
+     x0 = (a1*z0 + b1)/dnm;
+     y0 = (a2*z0 + b2)/dnm;
+     
+     z0 -= Z_CALC_OFFSET; //NJ
+     return 0;
+}
 
 // Adjust print surface height by linear interpolation over the bed_level array.
-#ifdef NONLINEAR_BED_LEVELING
 void adjust_delta(float cartesian[3])
 {
   int half = (ACCURATE_BED_LEVELING_POINTS - 1) / 2;
@@ -3466,11 +3558,18 @@ void adjust_delta(float cartesian[3])
   SERIAL_ECHOPGM(" offset="); SERIAL_ECHOLN(offset);
   */
 }
-#endif
 
 void prepare_move_raw()
 {
   previous_millis_cmd = millis();
+//  SERIAL_PROTOCOL("--------------------\nprepare_move_raw()\nx:");
+//  SERIAL_PROTOCOL(destination[X_AXIS]);
+//  SERIAL_PROTOCOL("\nY:");
+//  SERIAL_PROTOCOL(destination[Y_AXIS]);
+//  SERIAL_PROTOCOL("\nz:");
+//  SERIAL_PROTOCOL(destination[Z_AXIS]);
+//  SERIAL_PROTOCOL("\n--------------------\n");
+
   calculate_delta(destination);
   plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
                    destination[E_AXIS], feedrate*feedmultiply/60/100.0,
@@ -3479,7 +3578,6 @@ void prepare_move_raw()
     current_position[i] = destination[i];
   }
 }
-#endif
 
 void prepare_move()
 {

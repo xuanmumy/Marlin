@@ -75,11 +75,11 @@
 #endif
 
 // Define this to set a custom name for your generic Mendel,
-// #define CUSTOM_MENDEL_NAME "This Mendel"
+ #define CUSTOM_MENDEL_NAME "FirePick Delta"
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
-// #define MACHINE_UUID "00000000-0000-0000-0000-000000000000"
+ #define MACHINE_UUID "22b35943-6c03-4683-ad3d-baddf20d9120"
 
 // This defines the number of extruders
 #define EXTRUDERS 1
@@ -116,19 +116,6 @@
 
 // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
 #define DELTA_PRINTABLE_RADIUS 150.0
-
-// Effective X/Y positions of the three vertical towers.
-//#define SIN_60 0.8660254037844386
-//#define COS_60 0.5
-//#define DELTA_TOWER1_X -SIN_60*DELTA_RADIUS // front left tower
-//#define DELTA_TOWER1_Y -COS_60*DELTA_RADIUS
-//#define DELTA_TOWER2_X SIN_60*DELTA_RADIUS // front right tower
-//#define DELTA_TOWER2_Y -COS_60*DELTA_RADIUS
-//#define DELTA_TOWER3_X 0.0 // back middle tower
-//#define DELTA_TOWER3_Y DELTA_RADIUS
-
-// Diagonal rod squared
-//#define DELTA_DIAGONAL_ROD_2 pow(DELTA_DIAGONAL_ROD,2)
 
 #define Z_CALC_OFFSET -284.0 //Distance from delta 8mm rod/pulley to end effector base
 
@@ -168,10 +155,10 @@
 // 147 is Pt100 with 4k7 pullup
 // 110 is Pt100 with 1k pullup (non standard)
 
-#define TEMP_SENSOR_0 0
+#define TEMP_SENSOR_0 5
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 0
+#define TEMP_SENSOR_BED 1
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
@@ -278,7 +265,7 @@
 
 //this prevents dangerous Extruder moves, i.e. if the temperature is under the limit
 //can be software-disabled for whatever purposes by
-#define PREVENT_DANGEROUS_EXTRUDE
+//#define PREVENT_DANGEROUS_EXTRUDE
 //if PREVENT_DANGEROUS_EXTRUDE is on, you can still disable (uncomment) very long bits of extrusion separately.
 #define PREVENT_LENGTHY_EXTRUDE
 
@@ -299,7 +286,7 @@
   // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
   // #define ENDSTOPPULLUP_XMAX
   // #define ENDSTOPPULLUP_YMAX
-  // #define ENDSTOPPULLUP_ZMAX
+   #define ENDSTOPPULLUP_ZMAX
   // #define ENDSTOPPULLUP_XMIN
   // #define ENDSTOPPULLUP_YMIN
   // #define ENDSTOPPULLUP_ZMIN
@@ -355,7 +342,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Y_HOME_DIR -1
 #define Z_HOME_DIR -1
 
-#define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
+#define min_software_endstops false // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops false  // If true, axis won't move to coordinates greater than the defined lengths below.
 
 // Travel limits after homing
@@ -371,21 +358,22 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 //============================= Bed Auto Leveling ===========================
 
-//NJ#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
 
 #ifdef ENABLE_AUTO_BED_LEVELING
     
       // these are the positions on the bed to do the probing
-      #define DELTA_PROBABLE_RADIUS (DELTA_PRINTABLE_RADIUS-10)
+      //#define DELTA_PROBABLE_RADIUS (DELTA_PRINTABLE_RADIUS-10)
+      #define DELTA_PROBABLE_RADIUS 50.0 //214mm / 2 -10
       #define LEFT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
       #define RIGHT_PROBE_BED_POSITION DELTA_PROBABLE_RADIUS
       #define BACK_PROBE_BED_POSITION DELTA_PROBABLE_RADIUS
       #define FRONT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
     
       // these are the offsets to the probe relative to the extruder tip (Hotend - Probe)
-      #define X_PROBE_OFFSET_FROM_EXTRUDER -1.0
-      #define Y_PROBE_OFFSET_FROM_EXTRUDER 21.0
-      #define Z_PROBE_OFFSET_FROM_EXTRUDER -6.7
+      #define X_PROBE_OFFSET_FROM_EXTRUDER -47.0 //-47 //FirePick Delta v1
+      #define Y_PROBE_OFFSET_FROM_EXTRUDER  30.0 //30 //FirePick Delta v1
+      #define Z_PROBE_OFFSET_FROM_EXTRUDER  -0.0 //FirePick Delta v1
     
       #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                             // Be sure you have this distance over your Z_MAX_POS in case
@@ -393,14 +381,14 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
       #define XY_TRAVEL_SPEED 8000         // X and Y axis travel speed between probes, in mm/min
     
       #define Z_RAISE_BEFORE_PROBING 100  //How much the extruder will be raised before traveling to the first probing point.
-      #define Z_RAISE_BETWEEN_PROBINGS 5  //How much the extruder will be raised when traveling from between next probing points
+      #define Z_RAISE_BETWEEN_PROBINGS 10  //How much the extruder will be raised when traveling from between next probing points
     
     
       //If defined, the Probe servo will be turned on only during movement and then turned off to avoid jerk
       //The value is the delay to turn the servo off after powered on - depends on the servo speed; 300ms is good value, but you can try lower it.
       // You MUST HAVE the SERVO_ENDSTOPS defined to use here a value higher than zero otherwise your code will not compile.
     
-      //  #define PROBE_SERVO_DEACTIVATION_DELAY 300
+        #define PROBE_SERVO_DEACTIVATION_DELAY 300
     
     
       //If you have enabled the Bed Auto Leveling and are using the same Z Probe for Z Homing,
@@ -425,7 +413,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
       #define ACCURATE_BED_LEVELING
     
       #ifdef ACCURATE_BED_LEVELING
-        #define ACCURATE_BED_LEVELING_POINTS 7
+        #define ACCURATE_BED_LEVELING_POINTS 3
         #define ACCURATE_BED_LEVELING_GRID_X ((RIGHT_PROBE_BED_POSITION - LEFT_PROBE_BED_POSITION) / (ACCURATE_BED_LEVELING_POINTS - 1))
         #define ACCURATE_BED_LEVELING_GRID_Y ((BACK_PROBE_BED_POSITION - FRONT_PROBE_BED_POSITION) / (ACCURATE_BED_LEVELING_POINTS - 1))
     
@@ -467,7 +455,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80, 80, 80, 100}
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {XYZ_STEPS, XYZ_STEPS, XYZ_STEPS, 100}
 #define DEFAULT_MAX_FEEDRATE          {5000, 5000, 5000, 200}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {10000,10000,10000,100}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_MAX_ACCELERATION      {7500,7500,10000,100}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          10000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000   // X, Y, Z and E max acceleration in mm/s^2 for retracts
@@ -719,15 +707,15 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // leaving it undefined or defining as 0 will disable the servo subsystem
 // If unsure, leave commented / disabled
 //
-//#define NUM_SERVOS 3 // Servo index starts with 0 for M280 command
+#define NUM_SERVOS 3 // Servo index starts with 0 for M280 command
 
 // Servo Endstops
 //
 // This allows for servo actuated endstops, primary usage is for the Z Axis to eliminate calibration or bed height changes.
 // Use M206 command to correct for switch height offset to actual nozzle height. Store that setting with M500.
 //
-//#define SERVO_ENDSTOPS {-1, -1, 0} // Servo index for X, Y, Z. Disable with -1
-//#define SERVO_ENDSTOP_ANGLES {0,0, 0,0, 70,0} // X,Y,Z Axis Extend and Retract angles
+#define SERVO_ENDSTOPS {-1, -1, 0} // Servo index for X, Y, Z. Disable with -1
+#define SERVO_ENDSTOP_ANGLES {0,0, 0,0, 174,10} // X,Y,Z Axis Extend and Retract angles
 
 #include "Configuration_adv.h"
 #include "thermistortables.h"

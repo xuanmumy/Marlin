@@ -13,7 +13,15 @@
 #define E1_MS2_PIN -1
 #define DIGIPOTSS_PIN -1
 
+//***********************************
+// Stuff specific to FirePick Delta
+//***********************************
+#define VACUUM_PIN         9 //Make sure FAN_PIN is disabled...
 #define NEOPIXEL_PIN       16
+#define SERVO0_PIN         11 //X [0]
+#define SERVO1_PIN         6  //Y [1]
+#define SERVO2_PIN         5  //Z [2]
+#define SERVO4_PIN         4  //  [3]
 
 /****************************************************************************************
 * Arduino Mega pin assignment
@@ -40,7 +48,7 @@
 #define Z_DIR_PIN          48
 #define Z_ENABLE_PIN       62 //A8
 #define Z_MIN_PIN          18 //18
-#define Z_MAX_PIN          -1 //19
+#define Z_MAX_PIN          19 //19 (auto Z leveling probe)
 
 #define E0_STEP_PIN        26
 #define E0_DIR_PIN         28
@@ -54,20 +62,21 @@
 #define SDSS               53
 #define LED_PIN            13
 
-#define FAN_PIN            9 // (Sprinter config)
+#define FAN_PIN            -1 // (Sprinter config)
 
 #define PS_ON_PIN          12
 
-#define HEATER_0_PIN       10   // EXTRUDER 1
-#define HEATER_1_PIN       -1
-#define HEATER_2_PIN       -1
+//MOSFETS:
+#define HEATER_0_PIN       10   // D10 EXTRUDER 1
+#define HEATER_1_PIN       -1   // D9  (Use this for VACUUM instead!)
+#define HEATER_2_PIN       -1   // N/C on RAMPS
+#define HEATER_BED_PIN     8    // BED +12V2, 11A
 
-#define TEMP_0_PIN         13   // ANALOG NUMBERING
-#define TEMP_1_PIN         15   // ANALOG NUMBERING //14 or 15?
-#define TEMP_2_PIN         -1   // ANALOG NUMBERING //14 or 15
-
-#define HEATER_BED_PIN     8    // BED
-#define TEMP_BED_PIN       14   // ANALOG NUMBERING
+//ANALOG / THERMISTORS:
+#define TEMP_0_PIN         13   // A13 
+#define TEMP_1_PIN         15   // A15 
+#define TEMP_2_PIN         -1   // N/C on RAMPS
+#define TEMP_BED_PIN       14   // A14 
 
 
 
