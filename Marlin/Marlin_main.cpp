@@ -2916,7 +2916,7 @@ void prepare_move()
     }
     
     float adjusted = adjust_delta(destination); //Changed for rotational delta.  See note about this in adjust_delta() -NJ 6/29/2014
-    destination[Z_AXIS] = adjusted;
+    destination[Z_AXIS] += adjusted;
     
     calculate_delta(destination);
     plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
