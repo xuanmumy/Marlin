@@ -175,7 +175,7 @@ void get_coordinates();
 #ifdef DELTA
 void calculate_delta(float cartesian[3]);
 int delta_calcAngleYZ(float x0, float y0, float z0, float &theta);
-void adjust_delta(float cartesian[3]);
+float adjust_delta(float cartesian[3]); //Changed for rotational delta.  See note about this in marlin_main.cpp -NJ 6/29/2014
 extern float delta[3];
 #endif
 void prepare_move_raw();
