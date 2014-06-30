@@ -2742,14 +2742,13 @@ void calculate_delta(float cartesian[3])
   }
   else
   {
-//    SERIAL_ECHO("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
-//    SERIAL_ECHO(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
-//    SERIAL_ECHO(" z="); SERIAL_ECHO(cartesian[Z_AXIS]);
-//    SERIAL_ECHO(" Offz="); SERIAL_ECHOLN(z_with_offset);
-//  
-//    SERIAL_ECHO("delta x="); SERIAL_ECHO(delta[X_AXIS]);
-//    SERIAL_ECHO(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-//    SERIAL_ECHO(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
+    SERIAL_ECHO("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
+    SERIAL_ECHO(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
+    SERIAL_ECHO(" z="); SERIAL_ECHO(cartesian[Z_AXIS]);
+    SERIAL_ECHO(" Offz="); SERIAL_ECHO(z_with_offset);
+    SERIAL_ECHO(" delta x="); SERIAL_ECHO(delta[X_AXIS]);
+    SERIAL_ECHO(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+    SERIAL_ECHO(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
   }
 }
 
@@ -2887,6 +2886,10 @@ void prepare_move_raw()
   }
 }
 
+//Inputs:   current_position[] contains the position before moving
+//          destination[]      contains the desired location to move to
+//Outputs:  current_position[] contains the
+//          delta[]            contains the position (in degrees) for the delta mechanism arms
 void prepare_move()
 {
   clamp_to_software_endstops(destination);
@@ -2907,6 +2910,8 @@ void prepare_move()
   // SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
   // SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
   // SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
+  
+  float adjusted;
   for (int s = 1; s <= steps; s++) 
   {
     float fraction = float(s) / float(steps);
@@ -2915,9 +2920,11 @@ void prepare_move()
       destination[i] = current_position[i] + difference[i] * fraction;
     }
     
-    float adjusted = adjust_delta(destination); //Changed for rotational delta.  See note about this in adjust_delta() -NJ 6/29/2014
+    //Now adjust for auto Z leveling
+    adjusted = adjust_delta(destination); //Changed for rotational delta.  See note about this in adjust_delta() -NJ 6/29/2014
     destination[Z_AXIS] += adjusted;
     
+    //Now transform cartesian coordinates to delta
     calculate_delta(destination);
     plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
                      destination[E_AXIS], feedrate*feedmultiply/60/100.0,
@@ -2927,6 +2934,7 @@ void prepare_move()
   {
     current_position[i] = destination[i];
   }
+  current_position[Z_AXIS] -= adjusted; //ugly hack.  Un-adjust the current position that was adjusted above.
 }
 
 void prepare_arc_move(char isclockwise) {
