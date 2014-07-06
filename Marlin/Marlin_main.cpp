@@ -87,22 +87,6 @@ int delta_calcForward(float theta1, float theta2, float theta3, float &x0, float
 // M1   - Same as M0
 // M17  - Enable/Power all stepper motors
 // M18  - Disable all stepper motors; same as M84
-// M20  - List SD card
-// M21  - Init SD card
-// M22  - Release SD card
-// M23  - Select SD file (M23 filename.g)
-// M24  - Start/resume SD print
-// M25  - Pause SD print
-// M26  - Set SD position in bytes (M26 S12345)
-// M27  - Report SD print status
-// M28  - Start SD write (M28 filename.g)
-// M29  - Stop SD write
-// M30  - Delete file from SD (M30 filename.g)
-// M31  - Output time since last M109 or SD card start to serial
-// M32  - Select file and start SD print (Can be used _while_ printing from SD card files):
-//        syntax "M32 /path/filename#", or "M32 S<startpos bytes> !filename#"
-//        Call gcode file : "M32 P !filename#" and return to caller file after finishing (simiarl to #include).
-//        The '#' is necessary when calling from within sd files, as it stops buffer prereading
 // M42  - Change pin status via gcode Use M42 Px Sy to set pin x to value y, when omitting Px the onboard led will be used.
 // M80  - Turn on Power Supply
 // M81  - Turn off Power Supply
@@ -122,8 +106,6 @@ int delta_calcForward(float theta1, float theta2, float theta3, float &x0, float
 // M115 - Capabilities string
 // M117 - display message
 // M119 - Output Endstop status to serial port
-// M126 - Solenoid Air Valve Open (BariCUDA support by jmil)
-// M127 - Solenoid Air Valve Closed (BariCUDA vent to atmospheric pressure by jmil)
 // M128 - EtoP Open (BariCUDA EtoP = electricity to air pressure transducer by jmil)
 // M129 - EtoP Closed (BariCUDA EtoP = electricity to air pressure transducer by jmil)
 // M140 - Set bed target temp
@@ -180,9 +162,6 @@ int delta_calcForward(float theta1, float theta2, float theta3, float &x0, float
 //===========================================================================
 //=============================public variables=============================
 //===========================================================================
-#ifdef SDSUPPORT
-CardReader card;
-#endif
 float homing_feedrate[] = HOMING_FEEDRATE;
 bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedmultiply=100; //100->1 200->2
@@ -229,14 +208,6 @@ int EtoPPressure=0;
   bool retracted=false;
   float retract_length=3, retract_feedrate=17*60, retract_zlift=0.8;
   float retract_recover_length=0, retract_recover_feedrate=8*60;
-#endif
-
-#ifdef ULTIPANEL
-  #ifdef PS_DEFAULT_OFF
-    bool powersupply = false;
-  #else
-	  bool powersupply = true;
-  #endif
 #endif
 
 #ifdef DELTA
@@ -587,39 +558,9 @@ void loop()
 {
   if(buflen < (BUFSIZE-1))
     get_command();
-  #ifdef SDSUPPORT
-  card.checkautostart(false);
-  #endif
   if(buflen)
   {
-    #ifdef SDSUPPORT
-      if(card.saving)
-      {
-        if(strstr_P(cmdbuffer[bufindr], PSTR("M29")) == NULL)
-        {
-          card.write_command(cmdbuffer[bufindr]);
-          if(card.logging)
-          {
-            process_commands();
-          }
-          else
-          {
-            SERIAL_PROTOCOLLNPGM(MSG_OK);
-          }
-        }
-        else
-        {
-          card.closefile();
-          SERIAL_PROTOCOLLNPGM(MSG_FILE_SAVED);
-        }
-      }
-      else
-      {
-        process_commands();
-      }
-    #else
-      process_commands();
-    #endif //SDSUPPORT
+    process_commands();
     buflen = (buflen-1);
     bufindr = (bufindr + 1)%BUFSIZE;
   }
@@ -709,10 +650,6 @@ void get_command()
           case 2:
           case 3:
             if(Stopped == false) { // If printer is stopped by an error the G[0-3] codes are ignored.
-          #ifdef SDSUPPORT
-              if(card.saving)
-                break;
-          #endif //SDSUPPORT
               SERIAL_PROTOCOLLNPGM(MSG_OK);
             }
             else {
@@ -735,69 +672,6 @@ void get_command()
       if(!comment_mode) cmdbuffer[bufindw][serial_count++] = serial_char;
     }
   }
-  #ifdef SDSUPPORT
-  if(!card.sdprinting || serial_count!=0){
-    return;
-  }
-
-  //'#' stops reading from sd to the buffer prematurely, so procedural macro calls are possible
-  // if it occures, stop_buffering is triggered and the buffer is ran dry.
-  // this character _can_ occure in serial com, due to checksums. however, no checksums are used in sd printing
-
-  static bool stop_buffering=false;
-  if(buflen==0) stop_buffering=false;
-
-  while( !card.eof()  && buflen < BUFSIZE && !stop_buffering) {
-    int16_t n=card.get();
-    serial_char = (char)n;
-    if(serial_char == '\n' ||
-       serial_char == '\r' ||
-       (serial_char == '#' && comment_mode == false) ||
-       (serial_char == ':' && comment_mode == false) ||
-       serial_count >= (MAX_CMD_SIZE - 1)||n==-1)
-    {
-      if(card.eof()){
-        SERIAL_PROTOCOLLNPGM(MSG_FILE_PRINTED);
-        stoptime=millis();
-        char time[30];
-        unsigned long t=(stoptime-starttime)/1000;
-        int hours, minutes;
-        minutes=(t/60)%60;
-        hours=t/60/60;
-        sprintf_P(time, PSTR("%i hours %i minutes"),hours, minutes);
-        SERIAL_ECHO_START;
-        SERIAL_ECHOLN(time);
-        lcd_setstatus(time);
-        card.printingHasFinished();
-        card.checkautostart(true);
-
-      }
-      if(serial_char=='#')
-        stop_buffering=true;
-
-      if(!serial_count)
-      {
-        comment_mode = false; //for new command
-        return; //if empty line
-      }
-      cmdbuffer[bufindw][serial_count] = 0; //terminate string
-//      if(!comment_mode){
-        fromsd[bufindw] = true;
-        buflen += 1;
-        bufindw = (bufindw + 1)%BUFSIZE;
-//      }
-      comment_mode = false; //for new command
-      serial_count = 0; //clear buffer
-    }
-    else
-    {
-      if(serial_char == ';') comment_mode = true;
-      if(!comment_mode) cmdbuffer[bufindw][serial_count++] = serial_char;
-    }
-  }
-
-  #endif //SDSUPPORT
-
 }
 
 
@@ -838,7 +712,8 @@ XYZ_CONSTS_FROM_CONFIG(float, home_retract_mm, HOME_RETRACT_MM);
 //XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
 
 
-static void axis_is_at_home(int axis) {
+static void axis_is_at_home(int axis) 
+{
   current_position[axis] = base_home_pos(axis) + add_homeing[axis];
   min_pos[axis] =          base_min_pos(axis) + add_homeing[axis];
   max_pos[axis] =          base_max_pos(axis) + add_homeing[axis];
@@ -1244,14 +1119,6 @@ void process_commands()
       }
       break;
       #ifdef FWRETRACT
-      case 8: //Actuate ON (drag pin down)
-      {
-      }
-      break;
-      case 9: //Actuate OFF (drag pin up)
-      {
-      }
-      break;
       case 10: // G10 retract
       if(!retracted)
       {
@@ -1365,7 +1232,6 @@ void process_commands()
             //vector_3 corrected_position = plan_get_position_mm();
             //corrected_position.debug("position before G29");
             plan_bed_level_matrix.set_to_identity();
-
             reset_bed_level();
 
             setup_for_endstop_move();
@@ -1511,6 +1377,14 @@ void process_commands()
     {
       //Turn off vacuum
       digitalWrite(VACUUM_PIN,LOW);
+    }
+    break;
+    case 8: //M8 Actuate ON (drag pin down)
+    {
+    }
+    break;
+    case 9: //M8 Actuate OFF (drag pin up)
+    {
     }
     break;
     case 17: //M17 Enable/Power all stepper motors
@@ -1871,23 +1745,15 @@ void process_commands()
         *(starpos-1)='\0';
       break;
     case 114: // M114 Output current position to serial port
-      SERIAL_PROTOCOLPGM("X:");
-      SERIAL_PROTOCOL(current_position[X_AXIS]);
-      SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL(current_position[Y_AXIS]);
-      SERIAL_PROTOCOLPGM(" Z:");
-      SERIAL_PROTOCOL(current_position[Z_AXIS]);
-      SERIAL_PROTOCOLPGM(" E:");
-      SERIAL_PROTOCOL(current_position[E_AXIS]);
-
-      SERIAL_PROTOCOLPGM(MSG_COUNT_X);
-      SERIAL_PROTOCOL(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS]);
-      SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
-      SERIAL_PROTOCOLPGM(" Z:");
-      SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
-
-      SERIAL_PROTOCOLLN("");
+      SERIAL_PROTOCOL( "X:");       SERIAL_PROTOCOL(current_position[X_AXIS]);
+      SERIAL_PROTOCOL(" Y:");       SERIAL_PROTOCOL(current_position[Y_AXIS]);
+      SERIAL_PROTOCOL(" Z:");       SERIAL_PROTOCOL(current_position[Z_AXIS]);
+      SERIAL_PROTOCOL(" E:");       SERIAL_PROTOCOL(current_position[E_AXIS]); 
+      SERIAL_PROTOCOL("\n"); 
+      SERIAL_PROTOCOL(" dX:");      SERIAL_PROTOCOL(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS]);
+      SERIAL_PROTOCOL(" dY:");      SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
+      SERIAL_PROTOCOL(" dZ:");      SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
+      SERIAL_PROTOCOL(" CalcZ=");   SERIAL_PROTOCOLLN(Z_CALC_OFFSET);
       break;
     case 120: // M120 Disable endstops
       enable_endstops(false) ;
@@ -2104,10 +1970,10 @@ void process_commands()
       }
     }
     break;
-
-	case 226: // M226 P<pin number> S<pin state>- Wait until the specified pin reaches the state required
-	{
-      if(code_seen('P')){
+    case 226: // M226 P<pin number> S<pin state>- Wait until the specified pin reaches the state required
+    {
+      if(code_seen('P'))
+      {
         int pin_number = code_value(); // pin number
         int pin_state = -1; // required pin state - default is inverted
 
@@ -2346,13 +2212,6 @@ void process_commands()
         Config_PrintSettings();
     }
     break;
-    #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
-    case 540:
-    {
-        if(code_seen('S')) abort_on_endstop_hit = code_value() > 0;
-    }
-    break;
-    #endif
     #ifdef FILAMENTCHANGEENABLE
     case 600: //Pause for filament change X[pos] Y[pos] Z[relative lift] E[initial retract] L[later retract distance for removal]
     {
@@ -2619,10 +2478,6 @@ void FlushSerialRequestResend()
 void ClearToSend()
 {
   previous_millis_cmd = millis();
-  #ifdef SDSUPPORT
-  if(fromsd[bufindr])
-    return;
-  #endif //SDSUPPORT
   SERIAL_PROTOCOLLNPGM(MSG_OK);
 }
 
@@ -2738,17 +2593,18 @@ void calculate_delta(float cartesian[3])
     SERIAL_ECHO("    x="); SERIAL_ECHO(cartesian[X_AXIS]);
     SERIAL_ECHO("    y="); SERIAL_ECHO(cartesian[Y_AXIS]);
     SERIAL_ECHO("    z="); SERIAL_ECHO(cartesian[Z_AXIS]);
+    SERIAL_ECHO(" CalcZ="); SERIAL_ECHO(Z_CALC_OFFSET);
     SERIAL_ECHO(" Offz="); SERIAL_ECHOLN(z_with_offset);
   }
   else
   {
-    SERIAL_ECHO("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
-    SERIAL_ECHO(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
-    SERIAL_ECHO(" z="); SERIAL_ECHO(cartesian[Z_AXIS]);
-    SERIAL_ECHO(" Offz="); SERIAL_ECHO(z_with_offset);
-    SERIAL_ECHO(" delta x="); SERIAL_ECHO(delta[X_AXIS]);
-    SERIAL_ECHO(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-    SERIAL_ECHO(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
+//    SERIAL_ECHO("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
+//    SERIAL_ECHO(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
+//    SERIAL_ECHO(" z="); SERIAL_ECHO(cartesian[Z_AXIS]);
+//    SERIAL_ECHO(" Offz="); SERIAL_ECHO(z_with_offset);
+//    SERIAL_ECHO(" delta x="); SERIAL_ECHO(delta[X_AXIS]);
+//    SERIAL_ECHO(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+//    SERIAL_ECHO(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
   }
 }
 

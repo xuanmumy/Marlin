@@ -1,17 +1,6 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-// This configuration file contains the basic settings.
-// Advanced settings can be found in Configuration_adv.h
-// BASIC SETTINGS: select your board type, temperature sensor type, axis scaling, and endstop configuration
-
-//===========================================================================
-//============================= DELTA Printer ===============================
-//===========================================================================
-// For a Delta printer replace the configuration files with the files in the
-// example_configurations/delta directory.
-//
-
 // User-specified version info of this build to display in [Pronterface, etc] terminal window during
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
@@ -26,53 +15,7 @@
 // This determines the communication speed of the printer
 #define BAUDRATE 115200
 
-// This enables the serial port associated to the Bluetooth interface
-//#define BTENABLED              // Enable BT interface on AT90USB devices
-
-
-//// The following define selects which electronics board you have. Please choose the one that matches your setup
-// 10 = Gen7 custom (Alfons3 Version) "https://github.com/Alfons3/Generation_7_Electronics"
-// 11 = Gen7 v1.1, v1.2 = 11
-// 12 = Gen7 v1.3
-// 13 = Gen7 v1.4
-// 2  = Cheaptronic v1.0
-// 20 = Sethi 3D_1
-// 3  = MEGA/RAMPS up to 1.2 = 3
-// 33 = RAMPS 1.3 / 1.4 (Power outputs: Extruder, Fan, Bed)
-// 34 = RAMPS 1.3 / 1.4 (Power outputs: Extruder0, Extruder1, Bed)
-// 35 = RAMPS 1.3 / 1.4 (Power outputs: Extruder, Fan, Fan)
-// 4  = Duemilanove w/ ATMega328P pin assignment
-// 5  = Gen6
-// 51 = Gen6 deluxe
-// 6  = Sanguinololu < 1.2
-// 62 = Sanguinololu 1.2 and above
-// 63 = Melzi
-// 64 = STB V1.1
-// 65 = Azteeg X1
-// 66 = Melzi with ATmega1284 (MaKr3d version)
-// 67 = Azteeg X3
-// 68 = Azteeg X3 Pro
-// 7  = Ultimaker
-// 71 = Ultimaker (Older electronics. Pre 1.5.4. This is rare)
-// 72 = Ultimainboard 2.x (Uses TEMP_SENSOR 20)
-// 77 = 3Drag Controller
-// 8  = Teensylu
-// 80 = Rumba
-// 81 = Printrboard (AT90USB1286)
-// 82 = Brainwave (AT90USB646)
-// 83 = SAV Mk-I (AT90USB1286)
-// 9  = Gen3+
-// 70 = Megatronics
-// 701= Megatronics v2.0
-// 702= Minitronics v1.0
-// 90 = Alpha OMCA board
-// 91 = Final OMCA board
-// 301= Rambo
-// 21 = Elefu Ra Board (v3)
-
-#ifndef MOTHERBOARD
 #define MOTHERBOARD 33 //RAMPS 1.4 (Power outputs: Extruder, Fan, Bed)
-#endif
 
 // Define this to set a custom name for your generic Mendel,
  #define CUSTOM_MENDEL_NAME "FirePick Delta"
@@ -84,41 +27,10 @@
 // This defines the number of extruders
 #define EXTRUDERS 1
 
-//// The following define selects which power supply you have. Please choose the one that matches your setup
-// 1 = ATX
-// 2 = X-Box 360 203Watts (the blue wire connected to PS_ON and the red wire to VCC)
-
-#define POWER_SUPPLY 1
+#define POWER_SUPPLY 1 //ATX
 
 // Define this to have the electronics keep the power supply off on startup. If you don't know what this is leave it.
 // #define PS_DEFAULT_OFF
-
-//===========================================================================
-//============================== Delta Settings =============================
-//===========================================================================
-// Enable DELTA kinematics
-#define DELTA
-
-// Make delta curves from many straight lines (linear interpolation).
-// This is a trade-off between visible corners (not enough segments)
-// and processor overload (too many expensive sqrt calls).
-#define DELTA_SEGMENTS_PER_SECOND 50
-
-#define DELTA_E 115.0 //124.5     // end effector length
-#define DELTA_F 190.526 //190.5     // base length
-#define DELTA_RE 270.0 //336.55   // Carbon rod length
-#define DELTA_RF 90.0// 100.0    // Servo horn length
-
-
-
-// Horizontal distance bridged by diagonal push rods when effector is centered.
-//#define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-DELTA_EFFECTOR_OFFSET-DELTA_CARRIAGE_OFFSET)
-
-// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
-#define DELTA_PRINTABLE_RADIUS 150.0
-
-#define Z_CALC_OFFSET -284.0 //Distance from delta 8mm rod/pulley to end effector base
-
 
 //===========================================================================
 //=============================Thermal Settings  ============================
@@ -273,6 +185,41 @@
 #define EXTRUDE_MAXLENGTH (X_MAX_LENGTH+Y_MAX_LENGTH) //prevent extrusion of very large distances.
 
 //===========================================================================
+//============================== Delta Settings =============================
+//===========================================================================
+// Enable DELTA kinematics
+#define DELTA
+
+// Make delta curves from many straight lines (linear interpolation).
+// This is a trade-off between visible corners (not enough segments)
+// and processor overload (too many expensive sqrt calls).
+#define DELTA_SEGMENTS_PER_SECOND 50
+
+#define DELTA_E         131.636 // End effector length
+#define DELTA_F         190.526 // Base length
+#define DELTA_RE        270.000 // Carbon rod length
+#define DELTA_RF         90.000 // Servo horn length
+#define DELTA_Z_OFFSET  293.000 //247.893 // Distance from delta 8mm rod/pulley to table/bed.
+#define DELTA_EE_OFFS    15.000 // Ball joint plane to bottom of end effector surface
+//#define TOOL_OFFSET       0.000 // No offset
+//#define TOOL_OFFSET      40.000 // Distance between end effector ball joint plane and tip of tool (Z probe)
+#define TOOL_OFFSET      30.500 // Distance between end effector ball joint plane and tip of tool (PnP)
+#define Z_CALC_OFFSET  ((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) * -1)
+
+#define Z_HOME_ANGLE    -67.200 // This is the angle where the arms hit the endstop sensor
+#define Z_HOME_OFFS    ((247.893 - 182.002) - 0.5)
+                                // This is calculated from the above angle, after applying forward 
+                                // kinematics, and adding the Z calc offset to it.
+
+// Horizontal distance bridged by diagonal push rods when effector is centered.
+//#define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-DELTA_EFFECTOR_OFFSET-DELTA_CARRIAGE_OFFSET)
+
+// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+#define DELTA_PRINTABLE_RADIUS 150.0
+
+
+
+//===========================================================================
 //=============================Mechanical Settings===========================
 //===========================================================================
 
@@ -283,7 +230,7 @@
   // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
   // #define ENDSTOPPULLUP_XMAX
   // #define ENDSTOPPULLUP_YMAX
-   #define ENDSTOPPULLUP_ZMAX
+   #define ENDSTOPPULLUP_ZMAX //for Z touch probe
   // #define ENDSTOPPULLUP_XMIN
   // #define ENDSTOPPULLUP_YMIN
   // #define ENDSTOPPULLUP_ZMIN
@@ -363,8 +310,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
       #define FRONT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
     
       // these are the offsets to the probe relative to the extruder tip (Hotend - Probe)
-      #define X_PROBE_OFFSET_FROM_EXTRUDER -47.0 //-47 //FirePick Delta v1
-      #define Y_PROBE_OFFSET_FROM_EXTRUDER  30.0 //30 //FirePick Delta v1
+      #define X_PROBE_OFFSET_FROM_EXTRUDER -47.0 //FirePick Delta v1
+      #define Y_PROBE_OFFSET_FROM_EXTRUDER  30.0 //FirePick Delta v1
       #define Z_PROBE_OFFSET_FROM_EXTRUDER  -0.0 //FirePick Delta v1
     
       #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
@@ -380,7 +327,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
       //The value is the delay to turn the servo off after powered on - depends on the servo speed; 300ms is good value, but you can try lower it.
       // You MUST HAVE the SERVO_ENDSTOPS defined to use here a value higher than zero otherwise your code will not compile.
     
-        #define PROBE_SERVO_DEACTIVATION_DELAY 600
+      #define PROBE_SERVO_DEACTIVATION_DELAY 600
     
     
       //If you have enabled the Bed Auto Leveling and are using the same Z Probe for Z Homing,
@@ -405,7 +352,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
       #define ACCURATE_BED_LEVELING
     
       #ifdef ACCURATE_BED_LEVELING
-        #define ACCURATE_BED_LEVELING_POINTS 5
+        #define ACCURATE_BED_LEVELING_POINTS 9
         #define ACCURATE_BED_LEVELING_GRID_X ((RIGHT_PROBE_BED_POSITION - LEFT_PROBE_BED_POSITION) / (ACCURATE_BED_LEVELING_POINTS - 1))
         #define ACCURATE_BED_LEVELING_GRID_Y ((BACK_PROBE_BED_POSITION - FRONT_PROBE_BED_POSITION) / (ACCURATE_BED_LEVELING_POINTS - 1))
     
@@ -427,7 +374,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // For deltabots this means top and center of the Cartesian print volume.
 #define MANUAL_X_HOME_POS 0
 #define MANUAL_Y_HOME_POS 0
-#define MANUAL_Z_HOME_POS 100  // For delta: Distance between nozzle and print surface after homing.
+#define MANUAL_Z_HOME_POS Z_HOME_OFFS //Top of the work area
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E

@@ -17,7 +17,7 @@
 // Stuff specific to FirePick Delta
 //***********************************
 #define VACUUM_PIN         9 //Make sure FAN_PIN is disabled...
-#define NEOPIXEL_PIN       16
+#define NEOPIXEL_PIN       16 //For LED ring light on end effector
 #define SERVO0_PIN         11 //X [0]
 #define SERVO1_PIN         6  //Y [1]
 #define SERVO2_PIN         5  //Z [2]
@@ -28,7 +28,6 @@
 *
 ****************************************************************************************/
 #define KNOWN_BOARD 1
-
 
 #define LARGE_FLASH true
 
@@ -41,7 +40,7 @@
 #define Y_STEP_PIN         60 //A6
 #define Y_DIR_PIN          61 //A7
 #define Y_ENABLE_PIN       56 //A2
-#define Y_MIN_PIN          14 //14
+#define Y_MIN_PIN          14 //seems fried on current 2560 //14
 #define Y_MAX_PIN          -1 //15
 
 #define Z_STEP_PIN         46
@@ -58,8 +57,6 @@
 #define E1_DIR_PIN         34
 #define E1_ENABLE_PIN      30
 
-#define SDPOWER            -1
-#define SDSS               53
 #define LED_PIN            13
 
 #define FAN_PIN            -1 // (Sprinter config)
