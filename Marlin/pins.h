@@ -47,7 +47,7 @@
 #define Z_DIR_PIN          48
 #define Z_ENABLE_PIN       62 //A8
 #define Z_MIN_PIN          18 //18
-#define Z_MAX_PIN          19 //19 (auto Z leveling probe)
+#define Z_MAX_PIN          -1 //19 (auto Z leveling probe)
 
 #define E0_STEP_PIN        26
 #define E0_DIR_PIN         28

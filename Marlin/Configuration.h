@@ -5,7 +5,7 @@
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
-#define STRING_CONFIG_H_AUTHOR "(none, default config)" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "FirePick Delta" // Who made the changes.
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
 // This allows the connection of wireless adapters (for instance) to non-default port pins.
@@ -199,7 +199,12 @@
 #define DELTA_F         190.526 // Base length
 #define DELTA_RE        270.000 // Carbon rod length
 #define DELTA_RF         90.000 // Servo horn length
-#define DELTA_Z_OFFSET  293.000 //247.893 // Distance from delta 8mm rod/pulley to table/bed.
+//#define DELTA_Z_OFFSET  293.000 // Distance from delta 8mm rod/pulley to table/bed.
+
+//NOTE: For OpenPnP, set the zero to be about 25mm above the bed...
+#define DELTA_Z_OFFSET  268.000 // Distance from delta 8mm rod/pulley to table/bed.
+
+
 #define DELTA_EE_OFFS    15.000 // Ball joint plane to bottom of end effector surface
 //#define TOOL_OFFSET       0.000 // No offset
 //#define TOOL_OFFSET      40.000 // Distance between end effector ball joint plane and tip of tool (Z probe)
@@ -207,12 +212,10 @@
 #define Z_CALC_OFFSET  ((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) * -1)
 
 #define Z_HOME_ANGLE    -67.200 // This is the angle where the arms hit the endstop sensor
-#define Z_HOME_OFFS    ((247.893 - 182.002) - 0.5)
+#define Z_HOME_OFFS    (((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) - 182.002) - 0.5)
                                 // This is calculated from the above angle, after applying forward 
                                 // kinematics, and adding the Z calc offset to it.
 
-// Horizontal distance bridged by diagonal push rods when effector is centered.
-//#define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-DELTA_EFFECTOR_OFFSET-DELTA_CARRIAGE_OFFSET)
 
 // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
 #define DELTA_PRINTABLE_RADIUS 150.0
@@ -297,7 +300,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 //============================= Bed Auto Leveling ===========================
 
-#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+//#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
 
 #ifdef ENABLE_AUTO_BED_LEVELING
     
@@ -392,9 +395,9 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 //For Delta configuration: Units are degrees! That is, steps per degree
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80, 80, 80, 100}
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {XYZ_STEPS, XYZ_STEPS, XYZ_STEPS, 100}
-#define DEFAULT_MAX_FEEDRATE          {5000, 5000, 5000, 200}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {3000,3000,3000,100}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {XYZ_STEPS, XYZ_STEPS, XYZ_STEPS, 8.8888}
+#define DEFAULT_MAX_FEEDRATE          {5000, 5000, 5000, 10000}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {3000,3000,3000,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          3000//10000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000   // X, Y, Z and E max acceleration in mm/s^2 for retracts
@@ -482,7 +485,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // Use M206 command to correct for switch height offset to actual nozzle height. Store that setting with M500.
 //
 #define SERVO_ENDSTOPS {-1, -1, 0} // Servo index for X, Y, Z. Disable with -1
-#define SERVO_ENDSTOP_ANGLES {0,0, 0,0, 174,10} // X,Y,Z Axis Extend and Retract angles
+#define SERVO_ENDSTOP_ANGLES {0,0, 0,0, 174,90} // X,Y,Z Axis Extend and Retract angles
 
 #include "Configuration_adv.h"
 #include "thermistortables.h"

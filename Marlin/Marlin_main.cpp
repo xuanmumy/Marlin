@@ -1156,9 +1156,10 @@ void process_commands()
       break;
       #endif //FWRETRACT
     case 28: //G28 Home all Axis one at a time
+#ifdef ENABLE_AUTO_BED_LEVELING
       plan_bed_level_matrix.set_to_identity();  //Reset the plane ("erase" all leveling data)
       reset_bed_level();
-
+#endif
       saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
       feedmultiply = 100;
@@ -1218,6 +1219,7 @@ void process_commands()
       endstops_hit_on_purpose();
       break;
 
+#ifdef ENABLE_AUTO_BED_LEVELING
     case 29: // G29 Detailed Z-Probe, probes the bed at 3 or more points.
         {
             #if Z_MIN_PIN == -1
@@ -1308,7 +1310,6 @@ void process_commands()
             retract_z_probe();   // Retract Z probe by moving the end effector.
         }
         break;
-
     case 30: // G30 Single Z Probe
         {
             engage_z_probe(); // Engage Z Servo endstop
@@ -1334,6 +1335,7 @@ void process_commands()
             retract_z_probe(); // Retract Z Servo endstop if available
         }
         break;
+#endif
     case 90: // G90
       relative_mode = false;
       break;
@@ -1745,11 +1747,12 @@ void process_commands()
         *(starpos-1)='\0';
       break;
     case 114: // M114 Output current position to serial port
+      SERIAL_PROTOCOL( "M114 ");
       SERIAL_PROTOCOL( "X:");       SERIAL_PROTOCOL(current_position[X_AXIS]);
       SERIAL_PROTOCOL(" Y:");       SERIAL_PROTOCOL(current_position[Y_AXIS]);
       SERIAL_PROTOCOL(" Z:");       SERIAL_PROTOCOL(current_position[Z_AXIS]);
       SERIAL_PROTOCOL(" E:");       SERIAL_PROTOCOL(current_position[E_AXIS]); 
-      SERIAL_PROTOCOL("\n"); 
+      //SERIAL_PROTOCOL("\n"); 
       SERIAL_PROTOCOL(" dX:");      SERIAL_PROTOCOL(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS]);
       SERIAL_PROTOCOL(" dY:");      SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
       SERIAL_PROTOCOL(" dZ:");      SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
@@ -2679,6 +2682,7 @@ int delta_calcForward(float theta1, float theta2, float theta3, float &x0, float
      return 0;
 }
 
+#ifdef ENABLE_AUTO_BED_LEVELING
 // Adjust print surface height by linear interpolation over the bed_level array.
 // IMPORTANT NOTE: This function was originally written for Tripod delta, and moved all 3 columns up by "offset" amount. 
 //   It's a bit of a hack, but I've modified this for rotational delta, where it returns the "offset" amount as a float value,
@@ -2721,6 +2725,7 @@ float adjust_delta(float cartesian[3])
   SERIAL_ECHOPGM(" offset="); SERIAL_ECHOLN(offset);
   */
 }
+#endif
 
 void prepare_move_raw()
 {
@@ -2767,7 +2772,7 @@ void prepare_move()
   // SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
   // SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
   
-  float adjusted;
+  float adjusted = 0;
   for (int s = 1; s <= steps; s++) 
   {
     float fraction = float(s) / float(steps);
@@ -2776,9 +2781,11 @@ void prepare_move()
       destination[i] = current_position[i] + difference[i] * fraction;
     }
     
+#ifdef ENABLE_AUTO_BED_LEVELING
     //Now adjust for auto Z leveling
     adjusted = adjust_delta(destination); //Changed for rotational delta.  See note about this in adjust_delta() -NJ 6/29/2014
     destination[Z_AXIS] += adjusted;
+#endif
     
     //Now transform cartesian coordinates to delta
     calculate_delta(destination);
@@ -2897,9 +2904,9 @@ void manage_inactivity()
     if( (millis() - previous_millis_cmd) >  stepper_inactive_time )
     {
       if(blocks_queued() == false) {
-        disable_x();
-        disable_y();
-        disable_z();
+        //disable_x(); //NJ - We don't want to disable these, as the delta mechanism will lose position!!!!
+        //disable_y(); //NJ - We don't want to disable these, as the delta mechanism will lose position!!!!
+        //disable_z(); //NJ - We don't want to disable these, as the delta mechanism will lose position!!!!
         disable_e0();
         disable_e1();
         disable_e2();
