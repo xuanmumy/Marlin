@@ -212,12 +212,12 @@ int EtoPPressure=0;
 
 #ifdef DELTA
   //const float sqrt3 = 1.7320508075688772935274463415059;  // sqrt(3.0)
-  const float pi = 3.141592653;    // PI
+  const float pi     = 3.14159265358979323846;    // PI
   const float sin120 = 0.86602540378443864676372317075294; //sqrt3/2.0
   const float cos120 = -0.5;        
-  const float tan60 = 1.7320508075688772935274463415059; //sqrt3;
-  const float sin30 = 0.5;
-  const float tan30 = 0.57735026918962576450914878050196; //1/sqrt3
+  const float tan60  = 1.7320508075688772935274463415059; //sqrt3;
+  const float sin30  = 0.5;
+  const float tan30  = 0.57735026918962576450914878050196; //1/sqrt3
   float delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
 
 float delta[3] = {0.0, 0.0, 0.0};
@@ -491,6 +491,7 @@ void setup()
   setup_killpin();
   setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
+  MYSERIAL.println("Start-NJ");
   SERIAL_PROTOCOLLNPGM("start");
   SERIAL_ECHO_START;
 
@@ -547,6 +548,7 @@ void setup()
   #endif
   
   //FirePick Delta specific stuff
+  pinMode(VACUUM_PIN,OUTPUT);
   digitalWrite(VACUUM_PIN,LOW);
 //  ringLight.begin();
 //  //theaterChaseRainbow(5);
@@ -1119,7 +1121,7 @@ void process_commands()
       }
       break;
       #ifdef FWRETRACT
-      case 10: // G10 retract
+    case 10: // G10 retract
       if(!retracted)
       {
         destination[X_AXIS]=current_position[X_AXIS];
@@ -1137,7 +1139,7 @@ void process_commands()
       }
 
       break;
-      case 11: // G11 retract_recover
+    case 11: // G11 retract_recover
       if(retracted)
       {
         destination[X_AXIS]=current_position[X_AXIS];
@@ -2582,8 +2584,8 @@ void clamp_to_software_endstops(float target[3])
 void calculate_delta(float cartesian[3])
 {
   //trossen tutorial puts the "X" in the front/middle. FPD puts this arm in the back/middle for aesthetics.
-  float rotated_x = -1 * cartesian[X_AXIS];
-  float rotated_y = -1 * cartesian[Y_AXIS];
+  float rotated_x = -1.0 * cartesian[X_AXIS];
+  float rotated_y = -1.0 * cartesian[Y_AXIS];
   float z_with_offset = cartesian[Z_AXIS] + Z_CALC_OFFSET; //The delta calc below places zero at the top.  Subtract the Z offset to make zero at the bottom.
   
   int status =              delta_calcAngleYZ(rotated_x,                           rotated_y,                         z_with_offset, delta[X_AXIS]);
@@ -2618,12 +2620,12 @@ void calculate_delta(float cartesian[3])
      float y1 = -0.5 * 0.57735 * DELTA_F; // f/2 * tg 30
      y0 -= 0.5 * 0.57735       * DELTA_E;    // shift center to edge
      // z = a + b*y
-     float a = (x0*x0 + y0*y0 + z0*z0 +DELTA_RF*DELTA_RF - DELTA_RE*DELTA_RE - y1*y1) / (2*z0);
+     float a = (x0*x0 + y0*y0 + z0*z0 +DELTA_RF*DELTA_RF - DELTA_RE*DELTA_RE - y1*y1) / (2.0*z0);
      float b = (y1-y0)/z0;
      // discriminant
      float d = -(a+b*y1)*(a+b*y1)+DELTA_RF*(b*b*DELTA_RF+DELTA_RF); 
      if (d < 0) return -1; // non-existing point
-     float yj = (y1 - a*b - sqrt(d))/(b*b + 1); // choosing outer point
+     float yj = (y1 - a*b - sqrt(d))/(b*b + 1.0); // choosing outer point
      float zj = a + b*yj;
      theta = 180.0*atan(-zj/(y1 - yj))/pi + ((yj>y1)?180.0:0.0);
      return 0;
@@ -2633,7 +2635,7 @@ void calculate_delta(float cartesian[3])
 // returned status: 0=OK, -1=non-existing position
 int delta_calcForward(float theta1, float theta2, float theta3, float &x0, float &y0, float &z0) 
 {
-     float t = (DELTA_F-DELTA_E)*tan30/2;
+     float t = (DELTA_F-DELTA_E)*tan30/2.0;
      float dtr = pi/(float)180.0;
  
      theta1 *= dtr;

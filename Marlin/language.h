@@ -18,9 +18,9 @@
 // 9  Finnish
 // 10 Aragonese
 
-#ifndef LANGUAGE_CHOICE
+//#ifndef LANGUAGE_CHOICE
 	#define LANGUAGE_CHOICE 1  // Pick your language from the list above
-#endif
+//#endif
 
 #define PROTOCOL_VERSION "1.0"
 

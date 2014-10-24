@@ -15,7 +15,9 @@
 // This determines the communication speed of the printer
 #define BAUDRATE 115200
 
-#define MOTHERBOARD 33 //RAMPS 1.4 (Power outputs: Extruder, Fan, Bed)
+// 33  = RAMPS 1.3 / 1.4 (Power outputs: Extruder, Fan, Bed)
+// 639 = EMC01 (custom PCB assy for FirePick Delta, w/ATmega1284P)
+#define MOTHERBOARD 639 
 
 // Define this to set a custom name for your generic Mendel,
  #define CUSTOM_MENDEL_NAME "FirePick Delta"
@@ -25,7 +27,7 @@
  #define MACHINE_UUID "22b35943-6c03-4683-ad3d-baddf20d9120"
 
 // This defines the number of extruders
-#define EXTRUDERS 1
+#define EXTRUDERS 2
 
 #define POWER_SUPPLY 1 //ATX
 
@@ -67,10 +69,10 @@
 // 147 is Pt100 with 4k7 pullup
 // 110 is Pt100 with 1k pullup (non standard)
 
-#define TEMP_SENSOR_0 5
-#define TEMP_SENSOR_1 0
+#define TEMP_SENSOR_0 1
+#define TEMP_SENSOR_1 1
 #define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 1
+#define TEMP_SENSOR_BED 0
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
@@ -209,7 +211,7 @@
 //#define TOOL_OFFSET       0.000 // No offset
 //#define TOOL_OFFSET      40.000 // Distance between end effector ball joint plane and tip of tool (Z probe)
 #define TOOL_OFFSET      30.500 // Distance between end effector ball joint plane and tip of tool (PnP)
-#define Z_CALC_OFFSET  ((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) * -1)
+#define Z_CALC_OFFSET  ((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) * -1.0)
 
 #define Z_HOME_ANGLE    -67.200 // This is the angle where the arms hit the endstop sensor
 #define Z_HOME_OFFS    (((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) - 182.002) - 0.5)
@@ -396,8 +398,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //For Delta configuration: Units are degrees! That is, steps per degree
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80, 80, 80, 100}
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {XYZ_STEPS, XYZ_STEPS, XYZ_STEPS, 8.8888}
-#define DEFAULT_MAX_FEEDRATE          {5000, 5000, 5000, 10000}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {3000,3000,3000,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_MAX_FEEDRATE          {5000,      5000,      5000,      10000}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {3000,      3000,      3000,      10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          3000//10000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000   // X, Y, Z and E max acceleration in mm/s^2 for retracts
