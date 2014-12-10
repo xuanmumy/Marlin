@@ -1385,7 +1385,7 @@ void process_commands()
       st_synchronize();
       codenum += millis();  // keep track of when we started waiting
       previous_millis_cmd = millis();
-      while(millis() < codenum) {
+      while(millis()  < codenum ){
         manage_heater();
         manage_inactivity();
         lcd_update();
@@ -1412,6 +1412,7 @@ void process_commands()
 #ifdef ENABLE_AUTO_BED_LEVELING
       plan_bed_level_matrix.set_to_identity();  //Reset the plane ("erase" all leveling data)
 #endif //ENABLE_AUTO_BED_LEVELING
+
 
       saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
@@ -1862,39 +1863,20 @@ void process_commands()
     case 0: // M0 - Unconditional stop - Wait for user button press on LCD
     case 1: // M1 - Conditional stop - Wait for user button press on LCD
     {
-      char *src = strchr_pointer + 2;
-
+      LCD_MESSAGEPGM(MSG_USERWAIT);
       codenum = 0;
+      if(code_seen('P')) codenum = code_value(); // milliseconds to wait
+      if(code_seen('S')) codenum = code_value() * 1000; // seconds to wait
 
-      bool hasP = false, hasS = false;
-      if (code_seen('P')) {
-        codenum = code_value(); // milliseconds to wait
-        hasP = codenum > 0;
-      }
-      if (code_seen('S')) {
-        codenum = code_value() * 1000; // seconds to wait
-        hasS = codenum > 0;
-      }
-      starpos = strchr(src, '*');
-      if (starpos != NULL) *(starpos) = '\0';
-      while (*src == ' ') ++src;
-      if (!hasP && !hasS && *src != '\0') {
-        lcd_setstatus(src);
-      } else {
-        LCD_MESSAGEPGM(MSG_USERWAIT);
-      }
-
-      lcd_ignore_click();
       st_synchronize();
       previous_millis_cmd = millis();
       if (codenum > 0){
         codenum += millis();  // keep track of when we started waiting
-        while(millis() < codenum && !lcd_clicked()){
+        while(millis()  < codenum && !lcd_clicked()){
           manage_heater();
           manage_inactivity();
           lcd_update();
         }
-        lcd_ignore_click(false);
       }else{
         while(!lcd_clicked()){
           manage_heater();
@@ -1902,10 +1884,7 @@ void process_commands()
           lcd_update();
         }
       }
-      if (IS_SD_PRINTING)
-        LCD_MESSAGEPGM(MSG_RESUMING);
-      else
-        LCD_MESSAGEPGM(WELCOME_MSG);
+      LCD_MESSAGEPGM(MSG_RESUMING);
     }
     break;
 #endif
@@ -3951,6 +3930,29 @@ void clamp_to_software_endstops(float target[3])
 }
 
 #ifdef DELTA
+
+ float f = BASE_SIDE;
+
+float e = END_EFFECTOR_SIDE;
+
+float rf = DELTA_ARM_LENGTH;
+
+float re = DELTA_DIAGONAL_ROD;
+
+const float sin120 = DELTA_SIN120;
+
+const float cos120 = DELTA_COS120;
+
+float x0;
+
+float y0;
+
+float z0;
+
+
+// the function is called with like so at another point for the M665 gcode command:  recalc_delta_settings(delta_radius, delta_diagonal_rod);
+// for initial testing, this will be ignored
+
 void recalc_delta_settings(float radius, float diagonal_rod)
 {
 	 delta_tower1_x= -SIN_60*radius; // front left tower
@@ -3962,20 +3964,51 @@ void recalc_delta_settings(float radius, float diagonal_rod)
 	 delta_diagonal_rod_2= sq(diagonal_rod);
 }
 
+int delta_calcAngleYZ(float x0, float y0, float zo, float& theta)
+
+{
+float y1 = -0.5 * 0.57735 * f; // f/2 * tg 30
+y0 -= 0.5 * 0.57735 * e; // shift center to edge
+// z = a + b*y
+float a = (x0*x0 + y0*y0 + z0*z0 +rf*rf - re*re - y1*y1)/(2*z0);
+float b = (y1-y0)/z0;
+// discriminant
+float d = -(a+b*y1)*(a+b*y1)+rf*(b*b*rf+rf);
+if (d < 0) return -1; // non-existing point
+float yj = (y1 - a*b - sqrt(d))/(b*b + 1); // choosing outer point
+float zj = a + b*yj;
+
+theta = 180.0*atan(-zj/(y1 - yj))/DELTA_PI + ((yj>y1)?180.0:0.0);
+
+return 0;
+
+}
+
 void calculate_delta(float cartesian[3])
 {
-  delta[X_AXIS] = sqrt(delta_diagonal_rod_2
-                       - sq(delta_tower1_x-cartesian[X_AXIS])
-                       - sq(delta_tower1_y-cartesian[Y_AXIS])
-                       ) + cartesian[Z_AXIS];
-  delta[Y_AXIS] = sqrt(delta_diagonal_rod_2
-                       - sq(delta_tower2_x-cartesian[X_AXIS])
-                       - sq(delta_tower2_y-cartesian[Y_AXIS])
-                       ) + cartesian[Z_AXIS];
-  delta[Z_AXIS] = sqrt(delta_diagonal_rod_2
-                       - sq(delta_tower3_x-cartesian[X_AXIS])
-                       - sq(delta_tower3_y-cartesian[Y_AXIS])
-                       ) + cartesian[Z_AXIS];
+// inverse kinematics: (x0, y0, z0) -> (theta1, theta2, theta3)
+// returned status: 0=OK, -1=non-existing position
+
+float theta1 = 0.0;
+float theta2 = 0.0;
+float theta3 = 0.0;
+
+x0 = cartesian[X_AXIS];
+y0 = cartesian[Y_AXIS];
+z0 = cartesian[Z_AXIS] - DELTA_HOME_POS;
+
+int status = delta_calcAngleYZ(x0, y0, z0, theta1);
+
+if (status == 0) status = delta_calcAngleYZ(x0*cos120 + y0*sin120, y0*cos120-x0*sin120, z0, theta2); // rotate coords to +120 deg
+
+if (status == 0) status = delta_calcAngleYZ(x0*cos120 - y0*sin120, y0*cos120+x0*sin120, z0, theta3); // rotate coords to -120 deg
+
+//not sure about the scaling here, needs work
+
+delta[X_AXIS] = -theta1;
+delta[Y_AXIS] = -theta2;
+delta[Z_AXIS] = -theta3;
+
   /*
   SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
   SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
@@ -3985,6 +4018,7 @@ void calculate_delta(float cartesian[3])
   SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
   SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
   */
+
 }
 #endif
 
