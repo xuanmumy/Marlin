@@ -134,6 +134,7 @@
 // towards the edges of the print bed this will become more apparent
 // will also affect how far the machine thinks it can reach
 // reduce this value to get wider as it gets taller
+// symptons of an too large value: nozzle too close to bed near edges
 #define END_EFFECTOR_TO_MOUNTPLATE 190.0
 
 // vertical distance from the pulley axles to the mounting plate
@@ -142,12 +143,12 @@
 
 // trigonometric constants
 #define DELTA_SQRT3 1.732050807
-#define DELTA_PI 3.141592653; // PI
+#define DELTA_PI 3.141592653 // PI
 #define DELTA_SIN120 DELTA_SQRT3/2.0
-#define DELTA_COS120 -0.5;
-#define DELTA_TAN60 DELTA_SQRT3;
-#define DELTA_SIN30 0.5;
-#define DELTA_TAN30 1/DELTA_SQRT3;
+#define DELTA_COS120 -0.5
+#define DELTA_TAN60 DELTA_SQRT3
+#define DELTA_SIN30 0.5
+#define DELTA_TAN30 1/DELTA_SQRT3
 
 // base side length (length of the side of the equilateral triangle)
 #define BASE_SIDE BASE_RADIUS*2*sqrt(3)
@@ -557,13 +558,24 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define YPulleyCircumference 451.0
 #define ZPulleyCircumference 453.0
 
+// thickness of belt
+#define BeltThickness 1.49
+
+// thinnest part of the belt
+#define ToothDepth 0.74
+
+// recalculate circumference to take into account tooth thickness, as this adds to the radius of the pulley
+#define XPulleyEff ((XPulleyCircumference/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
+#define YPulleyEff ((YPulleyCircumference/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
+#define ZPulleyEff ((ZPulleyCircumference/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
+
 // steps per rotation of each large pulley
-#define XStepsPulley ToothSpacing*StepsPerRotation*TopPulleyTeeth/XPulleyCircumference
-#define YStepsPulley ToothSpacing*StepsPerRotation*TopPulleyTeeth/YPulleyCircumference
-#define ZStepsPulley ToothSpacing*StepsPerRotation*TopPulleyTeeth/ZPulleyCircumference
+#define XStepsPulley ToothSpacing*StepsPerRotation*TopPulleyTeeth/(XPulleyEff*1.8)
+#define YStepsPulley ToothSpacing*StepsPerRotation*TopPulleyTeeth/(YPulleyEff*1.8)
+#define ZStepsPulley ToothSpacing*StepsPerRotation*TopPulleyTeeth/(ZPulleyEff*1.8)
 
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {XStepsPulley/1.8, YStepsPulley/1.8, ZStepsPulley/1.8, 610.2}
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {XStepsPulley, YStepsPulley, ZStepsPulley, 610.2}
 
 // delta speeds must be the same on xyz
 #define DEFAULT_MAX_FEEDRATE          {50, 50, 50, 40}    // (mm/sec)
