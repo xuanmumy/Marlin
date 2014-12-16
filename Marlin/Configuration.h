@@ -556,7 +556,18 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // I lathed mine perfectly round, so they are not all exactly the same size
 #define XPulleyCircumference 452.0
 #define YPulleyCircumference 451.0
-#define ZPulleyCircumference 453.0
+#define ZPulleyCircumference 299.0
+
+// 360 degrees if circumference measured was around the whole pulley,
+// 231 degrees for halfmoon pulleys, measuring the distance from the start of the ridges to the end of the ridges
+#define XDegrees 360.0
+#define YDegrees 360.0
+#define ZDegrees 231.0
+
+//calculate circumferences from angles given
+#define XPulleyCircum XPulleyCircumference*360.0/XDegrees
+#define YPulleyCircum YPulleyCircumference*360.0/YDegrees
+#define ZPulleyCircum ZPulleyCircumference*360.0/ZDegrees
 
 // thickness of belt
 #define BeltThickness 1.49
@@ -565,9 +576,9 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define ToothDepth 0.74
 
 // recalculate circumference to take into account tooth thickness, as this adds to the radius of the pulley
-#define XPulleyEff ((XPulleyCircumference/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
-#define YPulleyEff ((YPulleyCircumference/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
-#define ZPulleyEff ((ZPulleyCircumference/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
+#define XPulleyEff ((XPulleyCircum/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
+#define YPulleyEff ((YPulleyCircum/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
+#define ZPulleyEff ((ZPulleyCircum/(2*DELTA_PI)) + (BeltThickness - ToothDepth))*2*DELTA_PI
 
 // steps per rotation of each large pulley
 #define XStepsPulley ToothSpacing*StepsPerRotation*TopPulleyTeeth/(XPulleyEff*1.8)
