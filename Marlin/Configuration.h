@@ -559,7 +559,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define ZPulleyCircumference 299.0
 
 // 360 degrees if circumference measured was around the whole pulley,
-// 231 degrees for halfmoon pulleys, measuring the distance from the start of the ridges to the end of the ridges
+// 231 degrees for 'half' pulleys (the ones that aren't a complete circle),
+// measuring the distance from the start of the ridges to the end of the ridges
 #define XDegrees 360.0
 #define YDegrees 360.0
 #define ZDegrees 231.0
