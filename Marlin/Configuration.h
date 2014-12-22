@@ -107,7 +107,7 @@
 
 // Make delta curves from many straight lines (linear interpolation).
 // This is a trade-off between visible corners (not enough segments)
-// and processor overload (too many expensive sqrt calls).
+// and processor overload (too many expensive calulations).
 #define DELTA_SEGMENTS_PER_SECOND 40
 
 // Horizontal offset of the pulley axle centres from the mounting plate centre
@@ -121,7 +121,7 @@
 // this has to EXACT. 1mm off and the hotend will far be too high or low in the middle of the printbed relative to edges
 #define DELTA_DIAGONAL_ROD 302.0 
 
-// upper arm length
+// upperarm length
 // if your hotend is close/too far from the bed near the edges, check this is correct
 #define DELTA_ARM_LENGTH 160.0
 
@@ -131,10 +131,11 @@
 
 // vertical distance from vertical midpoint of the end effector to mounting plate 
 // this controls whether objects get narrower or wider as it gets taller
+// and if set incorrectly, will contribute to the end effector not moving across the bed linearly
 // towards the edges of the print bed this will become more apparent
 // will also affect how far the machine thinks it can reach
-// reduce this value to get wider as it gets taller
-// symptons of an too large value: nozzle too close to bed near edges
+// Too large value: leaning outward
+// Too small value: leaning inward
 #define END_EFFECTOR_TO_MOUNTPLATE 190.0
 
 // vertical distance from the pulley axles to the mounting plate
